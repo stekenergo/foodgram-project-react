@@ -16,7 +16,7 @@ services:
       - pg_data:/var/lib/postgresql/data
 
   backend:
-    build: ../backend/
+    image: vglazasmotri/foodgram_backend
     restart: unless-stopped
     env_file: .env
     volumes:
@@ -27,9 +27,7 @@ services:
       - db
 
   frontend:
-    build:
-      context: ../frontend
-      dockerfile: Dockerfile
+    image: vglazasmotri/foodgram_frontend
     volumes:
       - ../frontend/:/app/result_build/
     depends_on:
@@ -39,7 +37,7 @@ services:
     image: nginx:1.19.3
     restart: unless-stopped
     ports:
-      - "80:80"
+      - "${BACKEND_PORT}:${HTTP_PORT}"
     volumes:
       - static:/var/html/backend_static/
       - media:/var/html/media/
