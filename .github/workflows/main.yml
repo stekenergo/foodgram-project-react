@@ -73,7 +73,7 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
-      - name: Copy infra/docker-compose.yml via ssh
+      - name: Copy docker-compose.yml via ssh
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.HOST }}
