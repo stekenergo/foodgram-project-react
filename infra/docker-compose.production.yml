@@ -1,48 +1,43 @@
-version: '3.3'
+version: '3'
 
 volumes:
   pg_data:
   static:
   media:
-  data:
 
 services:
 
   db:
     image: postgres:13
-    restart: unless-stopped
     env_file: .env
     volumes:
       - pg_data:/var/lib/postgresql/data
 
   backend:
-    image: vglazasmotri/foodgram_backend
-    restart: unless-stopped
+    image: stekenergof/foodgram_backend
     env_file: .env
-    volumes:
-      - static:/backend_static/
-      - media:/app/media/
-      - data:/app/data/
     depends_on:
       - db
+    volumes:
+      - static:/backend_static
+      - media:/app/media
 
   frontend:
-    image: vglazasmotri/foodgram_frontend
+    image: stekenergof/foodgram_frontend
+    env_file: .env
+    command: cp -r /app/build/. /frontend_static/
     volumes:
-      - ../frontend/:/app/result_build/
-    depends_on:
-      - backend
+      - static:/frontend_static
 
   nginx:
-    image: nginx:1.19.3
-    restart: unless-stopped
-    ports:
-      - "${BACKEND_PORT}:${HTTP_PORT}"
-    volumes:
-      - static:/var/html/backend_static/
-      - media:/var/html/media/
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf
-      - ../frontend/build:/usr/share/nginx/html/
-      - ../docs/:/usr/share/nginx/html/api/docs/
-    depends_on:
-      - frontend
+      image: nginx:1.19.3
+      env_file: .env
+      ports:
+        - 7000:80
+      volumes:
+        - ./nginx.conf:/etc/nginx/conf.d/default.conf
+        - ../docs/:/usr/share/nginx/html/api/docs/
+        - static:/static/
+        - media:/media
+      depends_on:
+        - backend
