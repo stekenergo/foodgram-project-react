@@ -13,7 +13,7 @@ services:
       - pg_data:/var/lib/postgresql/data
 
   backend:
-    image: artemon1981/foodgram_backend
+    image: stekenergofood/foodgram_backend
     env_file: ../.env
     depends_on:
       - db
@@ -22,7 +22,7 @@ services:
       - media:/app/media
 
   frontend:
-    image: artemon1981/foodgram_frontend
+    image: stekenergofood/foodgram_frontend
     env_file: ../.env
     depends_on:
       - backend
@@ -31,7 +31,7 @@ services:
       - static:/static/
 
   gateway:
-    image: artemon1981/foodgram_gateway
+    image: stekenergofood/foodgram_gateway
     env_file: ../.env
     depends_on:
       - frontend
