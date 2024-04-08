@@ -114,7 +114,7 @@ jobs:
     steps:
     - name: Checkout repo
       uses: actions/checkout@v3
-    - name: Copy infra/docker-compose.production.yml via ssh
+    - name: Copy docker-compose.production.yml via ssh
       uses: appleboy/scp-action@master
       with:
         host: ${{ secrets.HOST }}
@@ -151,7 +151,7 @@ jobs:
         to: ${{ secrets.TELEGRAM_TO }}
         token: ${{ secrets.TELEGRAM_TOKEN }}
         message: |
-          Деплой Kittygram успешно выполнен!
+          Деплой Foodgram успешно выполнен!
           Коммит:https://github.com/${{ github.repository }}/commit/${{github.sha}}.
           Сообщение коммита:"${{ github.event.commits[0].message }}"
           Автор:${{ github.actor }}
