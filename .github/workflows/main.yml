@@ -1,6 +1,6 @@
 name: Foodgram workflow
 
-on: [push]
+on: push
 jobs:
   tests:
     runs-on: ubuntu-latest
@@ -139,7 +139,7 @@ jobs:
             sudo docker compose -f docker-compose.production.yml exec backend python manage.py migrate
             sudo docker compose -f docker-compose.production.yml exec backend python manage.py db_import_data
             sudo docker compose -f docker-compose.production.yml exec backend python manage.py collectstatic --no-input
-            sudo docker compose -f docker-compose.production.yml exec backend cp -r ./collected_static/. /app/static/
+            sudo docker compose -f docker-compose.production.yml exec backend cp -r /app/collected_static/. /static/static/ 
 
   send_message:
     runs-on: ubuntu-latest
