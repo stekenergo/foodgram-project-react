@@ -26,6 +26,7 @@ class CustomUserViewSet(UserViewSet):
     queryset = User.objects.all()
     serializer_class = CustomUserSerializer
     permission_classes = (AuthorOrReadOnly,)
+    permission_classes = [permissions.IsAuthenticated]
 
     @action(
         detail=True,

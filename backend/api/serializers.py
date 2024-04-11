@@ -186,8 +186,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         )
         return serializer.data
 
-    @staticmethod
-    def add_ingredients(ingredients, instance):
+    def add_ingredients(self, ingredients, instance):
         """Добавление ингредиента в рецепт."""
         RecipeIngredient.objects.bulk_create([
             RecipeIngredient(
@@ -202,22 +201,24 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         """
         Проверка наличия ингредиента при создании или редактировании рецепта.
         """
-        list_ingredients = [
-            ingredient.get('id') for ingredient in ingredients
-        ]
-        if not list_ingredients:
+        if not ingredients:
             raise serializers.ValidationError(
                 "Добавьте ингредиент."
             )
-        elif len(list_ingredients) != len(set(list_ingredients)):
-            raise serializers.ValidationError(
-                'Ингредиенты повторяются.'
-            )
+
+        ingredient_ids = []
         for ingredient in ingredients:
             if int(ingredient.get('amount')) < MIN_VALUE:
                 raise serializers.ValidationError(
                     'Добавьте количество ингредиента'
                 )
+            ingredient_instance = ingredient.get('ingredient')
+            if ingredient_instance.id in ingredient_ids:
+                raise serializers.ValidationError(
+                    'Ингредиенты повторяются.'
+                )
+            ingredient_ids.append(ingredient_instance.id)
+
         return ingredients
 
     def create(self, validated_data):
@@ -241,10 +242,46 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
         instance.tags.add(*tags)
-        recipe = instance
-        self.add_ingredients(ingredients, recipe)
+        self.add_ingredients(ingredients, instance)
         instance.save()
         return instance
+
+    def validate(self, attrs):
+        ingredients = attrs.get('ingredients')
+        tags = attrs.get('tags')
+
+        if not ingredients:
+            raise serializers.ValidationError(
+                {'ingredients': 'Обязательное поле!'}
+            )
+
+        ingredient_ids = []
+        for ingredient in ingredients:
+            ingredient_instance = ingredient.get('ingredient')
+            ingredient_ids.append(ingredient_instance.id)
+
+        if len(ingredient_ids) != len(set(ingredient_ids)):
+            raise serializers.ValidationError(
+                {'ingredients': 'Ингредиенты должны быть уникальными!'}
+            )
+
+        if not tags:
+            raise serializers.ValidationError(
+                {'tags': 'Обязательное поле!'}
+            )
+        if len(tags) != len(set(tags)):
+            raise serializers.ValidationError(
+                {'tags': 'Теги должны быть уникальными!'}
+            )
+
+        return attrs
+
+    def validate_image(self, value):
+        if not value:
+            raise serializers.ValidationError(
+                {'image': 'Обязательное поле!'}
+            )
+        return value
 
 
 class SubscriptionSerializer(serializers.ModelSerializer):
