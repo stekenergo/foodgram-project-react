@@ -1,6 +1,7 @@
 import csv
 
 from api.filters import IngredientFilter, RecipeFilter
+from api.pagination import PageLimitPagination
 from api.permissions import AuthorOrReadOnly
 from api.serializers import (CartSerializer, CustomUserSerializer,
                              FavoriteSerializer, IngredientSerializer,
@@ -15,7 +16,6 @@ from recipes.models import (Cart, Favorite, Follow, Ingredient, Recipe,
                             RecipeIngredient, Tag)
 from rest_framework import permissions, status
 from rest_framework.decorators import action
-from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 from users.models import User
@@ -34,9 +34,8 @@ class CustomUserViewSet(UserViewSet):
         url_name='subscribe',
     )
     def add_or_delete_subscription(self, request, id):
-        """Подписка и отписка от автора рецепта."""
+        """Подписаться и отписываться от автора рецепта."""
         author = get_object_or_404(User, id=id)
-
         if request.method == 'POST':
             serializer = SubscriptionSerializer(
                 data={'user': request.user.id, 'author': author.id}
@@ -49,16 +48,9 @@ class CustomUserViewSet(UserViewSet):
             return Response(
                 author_serializer.data, status=status.HTTP_201_CREATED
             )
-
-        # Проверяем, существует ли подписка перед удалением
-        try:
-            subscription = Follow.objects.get(user=request.user, author=author)
-        except Follow.DoesNotExist:
-            return Response(
-                {"error": "Подписка не найдена."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
+        subscription = get_object_or_404(
+            Follow, user=request.user, author=author
+        )
         subscription.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -69,18 +61,16 @@ class CustomUserViewSet(UserViewSet):
         url_name='subscriptions',
     )
     def get_subscriptions(self, request):
-        """Список подписок на авторов."""
+        """Список авторов на которых подписан."""
         authors = User.objects.filter(following__user=request.user)
-        paginator = PageNumberPagination()
+        paginator = PageLimitPagination()
         result_pages = paginator.paginate_queryset(
             queryset=authors, request=request
         )
         serializer = SubscriptionShowSerializer(
-            result_pages,
-            context={'request': request},
-            many=True
+            result_pages, context={'request': request}, many=True
         )
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return paginator.get_paginated_response(serializer.data)
 
     @action(
         detail=False,
@@ -152,8 +142,6 @@ class RecipeViewSet(ModelViewSet):
             return Response(
                 favorite_serializer.data, status=status.HTTP_201_CREATED
             )
-
-        # Проверяем, добавлен ли рецепт в избранное пользователем
         if not Favorite.objects.filter(
             user=request.user,
             recipe=recipe
@@ -189,8 +177,6 @@ class RecipeViewSet(ModelViewSet):
             return Response(
                 shopping_cart_serializer.data, status=status.HTTP_201_CREATED
             )
-
-        # Проверка, был ли рецепт добавлен в корзину пользователем
         try:
             shopping_cart_recipe = Cart.objects.get(
                 user=request.user,
@@ -198,8 +184,6 @@ class RecipeViewSet(ModelViewSet):
             )
         except Cart.DoesNotExist:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-
-        # Рецепт был добавлен в корзину, удаляем его
         shopping_cart_recipe.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
