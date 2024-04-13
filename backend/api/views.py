@@ -26,7 +26,6 @@ class CustomUserViewSet(UserViewSet):
     queryset = User.objects.all()
     serializer_class = CustomUserSerializer
     permission_classes = (AuthorOrReadOnly,)
-    permission_classes = [permissions.IsAuthenticated]
 
     @action(
         detail=True,
@@ -37,6 +36,7 @@ class CustomUserViewSet(UserViewSet):
     def add_or_delete_subscription(self, request, id):
         """Подписка и отписка от автора рецепта."""
         author = get_object_or_404(User, id=id)
+
         if request.method == 'POST':
             serializer = SubscriptionSerializer(
                 data={'user': request.user.id, 'author': author.id}
@@ -49,9 +49,16 @@ class CustomUserViewSet(UserViewSet):
             return Response(
                 author_serializer.data, status=status.HTTP_201_CREATED
             )
-        subscription = get_object_or_404(
-            Follow, user=request.user, author=author
-        )
+
+        # Проверяем, существует ли подписка перед удалением
+        try:
+            subscription = Follow.objects.get(user=request.user, author=author)
+        except Follow.DoesNotExist:
+            return Response(
+                {"error": "Подписка не найдена."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         subscription.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -69,9 +76,11 @@ class CustomUserViewSet(UserViewSet):
             queryset=authors, request=request
         )
         serializer = SubscriptionShowSerializer(
-            result_pages, context={'request': request}, many=True
+            result_pages,
+            context={'request': request},
+            many=True
         )
-        return paginator.get_paginated_response(serializer.data)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(
         detail=False,
@@ -131,7 +140,7 @@ class RecipeViewSet(ModelViewSet):
         permission_classes=(permissions.IsAuthenticated,)
     )
     def add_or_delete_favorite(self, request, pk):
-        """Для добавления рецептов в избранное."""
+        """Для добавления или удаления рецептов в избранное."""
         recipe = get_object_or_404(Recipe, pk=pk)
         if request.method == 'POST':
             serializer = FavoriteSerializer(
@@ -143,6 +152,17 @@ class RecipeViewSet(ModelViewSet):
             return Response(
                 favorite_serializer.data, status=status.HTTP_201_CREATED
             )
+
+        # Проверяем, добавлен ли рецепт в избранное пользователем
+        if not Favorite.objects.filter(
+            user=request.user,
+            recipe=recipe
+        ).exists():
+            return Response(
+                {"error": "Рецепт не был добавлен в избранное пользователя"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         favorite_recipe = get_object_or_404(
             Favorite, user=request.user, recipe=recipe
         )
@@ -156,8 +176,8 @@ class RecipeViewSet(ModelViewSet):
         url_name='shopping_cart',
         permission_classes=(permissions.IsAuthenticated,)
     )
-    def add_or_deletet_shopping_cart(self, request, pk):
-        """Для добавления в список покупок."""
+    def add_or_delete_shopping_cart(self, request, pk):
+        """Добавление в корзину или удаление из нее."""
         recipe = get_object_or_404(Recipe, pk=pk)
         if request.method == 'POST':
             serializer = CartSerializer(
@@ -169,9 +189,17 @@ class RecipeViewSet(ModelViewSet):
             return Response(
                 shopping_cart_serializer.data, status=status.HTTP_201_CREATED
             )
-        shopping_cart_recipe = get_object_or_404(
-            Cart, user=request.user, recipe=recipe
-        )
+
+        # Проверка, был ли рецепт добавлен в корзину пользователем
+        try:
+            shopping_cart_recipe = Cart.objects.get(
+                user=request.user,
+                recipe=recipe
+            )
+        except Cart.DoesNotExist:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        # Рецепт был добавлен в корзину, удаляем его
         shopping_cart_recipe.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 

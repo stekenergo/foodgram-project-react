@@ -307,7 +307,7 @@ class SubscriptionSerializer(serializers.ModelSerializer):
 
 
 class SubscriptionShowSerializer(CustomUserSerializer):
-    """Индикация списка подписок на других авторов."""
+    """Отображение списка подписок на других авторов."""
     recipes = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()
 
