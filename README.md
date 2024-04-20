@@ -53,6 +53,10 @@ python3 manage.py createsuperuser
 ```
 python3 manage.py collectstatic
 ```
+**Загрузите ингредиенты и теги в базу данных:
+```
+python manage.py db_import_data
+```
 ```
 sudo cp -r путь_к_директории_с_бэкендом/static_backend /var/www/название_проекта
 ```
@@ -146,7 +150,9 @@ username/foodgram_gateway.
 **Выполнять команды для сборки статики в приложении бэкенда, переносить статику в volume; выполнять миграции;
 **Извещать вас в Telegram об успешном завершении деплоя.
 
+[Документацию проекта можно посмотреть по этой ссылке](https://foodgramdesk.sytes.net/api/docs/)
+
 [Работу проекта можно посмотреть по этой ссылке](https://foodgramdesk.sytes.net)
 
-### Автор:
+### Автор: 
 [Дмитрий](https://github.com/stekenergo)

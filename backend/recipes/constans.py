@@ -1,3 +1,5 @@
 MIN_VALUE = 1
 MAX_LENGTH_NAME = 200
 MAX_LENGTH_COLOR = 7
+PATH_DB_IMPORT_DATA_TAG = 'data/tags.csv'
+PATH_DB_IMPORT_DATA_ING = 'data/ingredients.csv'

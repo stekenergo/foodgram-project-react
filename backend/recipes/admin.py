@@ -1,4 +1,5 @@
 from django.contrib import admin
+
 from recipes.constans import MIN_VALUE
 from recipes.models import (Cart, Favorite, Follow, Ingredient, Recipe,
                             RecipeIngredient, Tag)
@@ -16,23 +17,20 @@ class RecipeAdmin(admin.ModelAdmin):
         'name', 'author', 'get_tags', 'get_ingredients', 'count_favorites',
         'pub_date',
     )
-    list_filter = ('name', 'author', 'tags')
-    inlines = (RecipeIngredientInline, )
+    list_filter = ('name', 'author__username', 'tags')
+    inlines = (RecipeIngredientInline,)
 
+    @admin.display(description='Кол-во добавлений в избранное')
     def count_favorites(self, obj):
         return obj.favorites.count()
 
-    count_favorites.short_description = 'Кол-во добавлений в избранное'
-
+    @admin.display(description='Теги')
     def get_tags(self, obj):
         return '\n'.join(obj.tags.values_list('name', flat=True))
 
-    get_tags.short_description = 'Теги'
-
+    @admin.display(description='Ингредиенты')
     def get_ingredients(self, obj):
         return '\n'.join(obj.ingredients.values_list('name', flat=True))
-
-    get_ingredients.short_description = 'Ингредиенты'
 
 
 @admin.register(Tag)

@@ -1,10 +1,12 @@
 from django_filters import rest_framework as filters
 from django_filters.rest_framework import FilterSet
-from recipes.models import Ingredient, Recipe, Tag
+
+from recipes.models import Ingredient, Recipe
 
 
 class IngredientFilter(filters.FilterSet):
     """Поиск по ингредиентам."""
+
     name = filters.CharFilter(lookup_expr='istartswith')
 
     class Meta:
@@ -13,10 +15,8 @@ class IngredientFilter(filters.FilterSet):
 
 
 class RecipeFilter(FilterSet):
-    tags = filters.ModelMultipleChoiceFilter(
-        field_name='tags__slug',
-        to_field_name='slug',
-        queryset=Tag.objects.all(),
+    tags = filters.AllValuesMultipleFilter(
+        field_name='tags__slug'
     )
     is_favorited = filters.BooleanFilter(
         method='get_is_favorited'
@@ -27,7 +27,7 @@ class RecipeFilter(FilterSet):
 
     class Meta:
         model = Recipe
-        fields = ('tags', 'author',)
+        fields = ('tags', 'author', 'is_favorited')
 
     def get_is_favorited(self, queryset, name, value):
         if value:

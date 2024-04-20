@@ -135,7 +135,7 @@ DJOSER = {
     "SEND_ACTIVATION_EMAIL": False,
     'HIDE_USERS': False,
     'SERIALIZERS': {
-        'current_user': 'api.serializers.CustomUserSerializer',
+        'current_user': 'api.serializers.UserSerializer',
     },
     'PERMISSIONS': {
         'user': ['rest_framework.permissions.AllowAny'],

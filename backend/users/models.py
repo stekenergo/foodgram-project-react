@@ -1,14 +1,16 @@
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.db import models
-from users.constans import MAX_LENGTH_EMAIL, MAX_LENGTH_NAME
+
+from users.constans import (MAX_LENGTH_EMAIL, MAX_LENGTH_NAME,
+                            MAX_LENGTH_PASSWORD)
 from users.validators import validate_username
 
 
 class User(AbstractUser):
     """Модель кастомного пользователя."""
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
+    REQUIRED_FIELDS = ['username', 'first_name', 'last_name', 'password']
 
     username = models.CharField(
         'Уникальный юзернейм',
@@ -16,6 +18,7 @@ class User(AbstractUser):
         unique=True,
         validators=(validate_username, UnicodeUsernameValidator()),
     )
+    # проверка на me в validators.py
     email = models.EmailField(
         'Адрес электронной почты',
         unique=True,
@@ -29,9 +32,13 @@ class User(AbstractUser):
         'Фамилия',
         max_length=MAX_LENGTH_NAME,
     )
+    password = models.CharField(
+        'Пароль',
+        max_length=MAX_LENGTH_PASSWORD,
+    )
 
     class Meta:
-        ordering = ['id']
+        ordering = ['username']
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
 
