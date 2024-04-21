@@ -14,8 +14,7 @@ from api.pagination import PageLimitPagination
 from api.permissions import AuthorOrReadOnly
 from api.serializers import (CartSerializer, FavoriteSerializer,
                              IngredientSerializer, RecipeCreateSerializer,
-                             RecipeSerializer, RecipeShortSerializer,
-                             SubscriptionSerializer,
+                             RecipeSerializer, SubscriptionSerializer,
                              SubscriptionShowSerializer, TagSerializer,
                              UserSerializer)
 from recipes.models import (Cart, Favorite, Follow, Ingredient, Recipe,
@@ -43,17 +42,14 @@ class UserViewSet(UserViewSet):
         """Подписаться и отписываться от автора рецепта."""
         author = get_object_or_404(User, id=id)
         if request.method == 'POST':
+            serializer = SubscriptionShowSerializer(
+                author, context={'request': request}
+            )
             serializer = SubscriptionSerializer(
                 data={'user': request.user.id, 'author': author.id}
             )
             serializer.is_valid(raise_exception=True)
             serializer.save()
-            author_serializer = SubscriptionShowSerializer(
-                author, context={'request': request}
-            )
-            return Response(
-                author_serializer.data, status=status.HTTP_201_CREATED
-            )
         subscription = get_object_or_404(
             Follow, user=request.user, author=author
         )
@@ -140,10 +136,7 @@ class RecipeViewSet(ModelViewSet):
             )
             serializer.is_valid(raise_exception=True)
             serializer.save()
-            response_serializer = RecipeShortSerializer(recipe)
-            return Response(
-                response_serializer.data, status=status.HTTP_201_CREATED
-            )
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
         try:
             item = model_class.objects.get(
                 user=request.user,
@@ -183,7 +176,7 @@ class RecipeViewSet(ModelViewSet):
     def get_queryset(self):
         """Оптимизация запросов к базе данных."""
         recipes = Recipe.objects.prefetch_related(
-            'recipeingredient_set__ingredient', 'tags'
+            'recipe_ingredients__ingredient', 'tags'
         ).all()
         return recipes
 

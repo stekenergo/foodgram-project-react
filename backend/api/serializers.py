@@ -135,6 +135,11 @@ class RecipeShortSerializer(serializers.ModelSerializer):
             'cooking_time'
         )
 
+    def to_representation(self, instance):
+        """Переопределение метода для управления выводом."""
+        data = super().to_representation(instance)
+        return data
+
 
 class RecipeSerializer(serializers.ModelSerializer):
     """Отображение рецептов."""
@@ -144,7 +149,7 @@ class RecipeSerializer(serializers.ModelSerializer):
     image = Base64ImageField(use_url=True, max_length=None)
     ingredients = RecipeIngredientSerializer(
         many=True,
-        source='recipeingredient_set',
+        source='recipe_ingredients',
     )
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
@@ -313,3 +318,8 @@ class SubscriptionShowSerializer(UserSerializer):
 
     def get_recipes_count(self, object):
         return object.recipes.count()
+
+    def to_representation(self, instance):
+        """Переопределение метода для управления выводом."""
+        data = super().to_representation(instance)
+        return data
