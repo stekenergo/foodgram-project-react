@@ -2,11 +2,7 @@ from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.db import models
 
-from users.constans import (
-    MAX_LENGTH_EMAIL,
-    MAX_LENGTH_NAME,
-    MAX_LENGTH_PASSWORD
-)
+from users.constans import MAX_LEN_PASS, MAX_LENGTH_EMAIL, MAX_LENGTH_NAME
 from users.validators import validate_username
 
 
@@ -37,7 +33,7 @@ class User(AbstractUser):
     )
     password = models.CharField(
         'Пароль',
-        max_length=MAX_LENGTH_PASSWORD,
+        max_length=MAX_LEN_PASS,
     )
 
     class Meta:
