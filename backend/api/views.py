@@ -2,6 +2,7 @@ import csv
 
 from django.db.models import Sum
 from django.shortcuts import HttpResponse, get_object_or_404
+
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
 from rest_framework import permissions, status
@@ -12,13 +13,26 @@ from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 from api.filters import IngredientFilter, RecipeFilter
 from api.pagination import PageLimitPagination
 from api.permissions import AuthorOrReadOnly
-from api.serializers import (CartSerializer, FavoriteSerializer,
-                             IngredientSerializer, RecipeCreateSerializer,
-                             RecipeSerializer, SubscriptionSerializer,
-                             SubscriptionShowSerializer, TagSerializer,
-                             UserSerializer)
-from recipes.models import (Cart, Favorite, Follow, Ingredient, Recipe,
-                            RecipeIngredient, Tag)
+from api.serializers import (
+    CartSerializer,
+    FavoriteSerializer,
+    IngredientSerializer,
+    RecipeCreateSerializer,
+    RecipeSerializer,
+    SubscriptionSerializer,
+    SubscriptionShowSerializer,
+    TagSerializer,
+    UserSerializer,
+)
+from recipes.models import (
+    Cart,
+    Favorite,
+    Follow,
+    Ingredient,
+    Recipe,
+    RecipeIngredient,
+    Tag,
+)
 from users.models import User
 
 
@@ -217,5 +231,4 @@ class RecipeViewSet(ModelViewSet):
             'ingredient__name',
             'ingredient__measurement_unit'
         ).annotate(ingredient_amount_sum=Sum('amount'))
-
         return self.ingredients_to_csv(ingredients)

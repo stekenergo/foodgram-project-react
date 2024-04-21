@@ -2,6 +2,7 @@ import csv
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
+
 from tqdm import tqdm
 
 from recipes.constans import PATH_DB_IMPORT_DATA_ING, PATH_DB_IMPORT_DATA_TAG

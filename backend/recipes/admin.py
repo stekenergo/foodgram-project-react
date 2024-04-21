@@ -1,8 +1,15 @@
 from django.contrib import admin
 
 from recipes.constans import MIN_VALUE
-from recipes.models import (Cart, Favorite, Follow, Ingredient, Recipe,
-                            RecipeIngredient, Tag)
+from recipes.models import (
+    Cart,
+    Favorite,
+    Follow,
+    Ingredient,
+    Recipe,
+    RecipeIngredient,
+    Tag,
+)
 
 
 class RecipeIngredientInline(admin.TabularInline):

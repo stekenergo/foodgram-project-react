@@ -4,8 +4,15 @@ from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
 from api.constans import MIN_VALUE
-from recipes.models import (Cart, Favorite, Follow, Ingredient, Recipe,
-                            RecipeIngredient, Tag)
+from recipes.models import (
+    Cart,
+    Favorite,
+    Follow,
+    Ingredient,
+    Recipe,
+    RecipeIngredient,
+    Tag,
+)
 from users.models import User
 
 
