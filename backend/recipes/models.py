@@ -16,6 +16,11 @@ class Tag(models.Model):
     color = models.CharField(max_length=MAX_LENGTH_COLOR, unique=True)
     slug = models.SlugField(max_length=MAX_LENGTH_NAME, unique=True)
 
+    class Meta:
+        verbose_name = 'Тег'
+        verbose_name_plural = 'Теги'
+        ordering = ['name']
+
     def __str__(self):
         return self.name
 
@@ -25,11 +30,6 @@ class Tag(models.Model):
                 {'color': 'Цвет должен быть в формате HEX (#RRGGBB)'}
             )
         super().clean()
-
-    class Meta:
-        verbose_name = 'Тег'
-        verbose_name_plural = 'Теги'
-        ordering = ['name']
 
 
 class Recipe(models.Model):
@@ -101,7 +101,11 @@ class RecipeIngredient(models.Model):
     recipe = models.ForeignKey(
         Recipe, on_delete=models.CASCADE, related_name='recipe_ingredients'
     )
-    ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
+    ingredient = models.ForeignKey(
+        Ingredient,
+        on_delete=models.CASCADE,
+        related_name='ingredients'
+    )
     amount = models.PositiveIntegerField(
         verbose_name='Кол-во ингредиента в рецепте.',
         validators=[
@@ -164,13 +168,13 @@ class Cart(models.Model):
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='shopping_users',
+        related_name='shopping_сarts',
         verbose_name='Пользователь',
     )
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
-        related_name='shopping_recipe',
+        related_name='shopping_recipes',
         verbose_name='Рецепт',
     )
 

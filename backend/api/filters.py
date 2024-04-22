@@ -27,7 +27,7 @@ class RecipeFilter(FilterSet):
 
     class Meta:
         model = Recipe
-        fields = ('tags', 'author', 'is_favorited')
+        fields = ('tags', 'author', 'is_favorited', 'is_in_shopping_cart')
 
     def get_is_favorited(self, queryset, name, value):
         if value:
@@ -36,5 +36,5 @@ class RecipeFilter(FilterSet):
 
     def get_is_in_shopping_cart(self, queryset, name, value):
         if value:
-            return queryset.filter(shopping_recipe__user=self.request.user)
+            return queryset.filter(shopping_recipes__user=self.request.user)
         return queryset

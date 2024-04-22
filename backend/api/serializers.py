@@ -113,6 +113,11 @@ class RecipeIngredientCreateSerializer(serializers.ModelSerializer):
         source='ingredient',
         queryset=Ingredient.objects.all()
     )
+    amount = serializers.IntegerField
+
+    class Meta:
+        model = RecipeIngredient
+        fields = ('id', 'amount')
 
     def validate_amount(self, value):
         """Проверка мин. значения количества ингредиента."""
@@ -122,10 +127,6 @@ class RecipeIngredientCreateSerializer(serializers.ModelSerializer):
                 .format(MIN_VALUE)
             )
         return value
-
-    class Meta:
-        model = RecipeIngredient
-        fields = ('id', 'amount')
 
 
 class RecipeShortSerializer(serializers.ModelSerializer):
@@ -171,18 +172,24 @@ class RecipeSerializer(serializers.ModelSerializer):
         """Истина, если рецепт в избранном иначе Ложь."""
         request = self.context.get('request')
         return (
-            request and request.user.is_authenticated
-            and obj.favorites.filter(user=request.user).exists()
+            request
+            and request.user.is_authenticated
+            and obj.favorites.filter(
+                user=request.user
+            ).exists()
         )
 
     def get_is_in_shopping_cart(self, obj):
-        """Истина, если рецепт в корзине инче Ложь."""
+        """Истина, если рецепт в корзине, иначе Ложь."""
         request = self.context.get('request')
-        if request is None or request.user.is_anonymous:
-            return False
-        return Cart.objects.filter(
-            user=request.user, recipe=obj
-        ).exists()
+        return (
+            request
+            and request.user.is_authenticated
+            and Cart.objects.filter(
+                user=request.user,
+                recipe=obj
+            ).exists()
+        )
 
 
 class RecipeCreateSerializer(serializers.ModelSerializer):
@@ -228,16 +235,14 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         """Редактирование рецепта."""
-        ingredients_data = validated_data.pop('ingredients', [])
-        tags_data = validated_data.pop('tags', [])
-        instance = super().update(instance, validated_data)
+        ingredients_data = validated_data.pop('ingredients')
+        tags_data = validated_data.pop('tags')
         instance.tags.clear()
         instance.ingredients.clear()
         for tag in tags_data:
             instance.tags.add(tag)
         self.add_ingredients(ingredients_data, instance)
-        instance.save()
-        return instance
+        return super().update(instance, validated_data)
 
     def validate(self, attrs):
         ingredients = attrs.get('ingredients')

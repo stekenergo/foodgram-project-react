@@ -46,6 +46,30 @@ class UserViewSet(UserViewSet):
         permissions.IsAuthenticatedOrReadOnly
     )
 
+    # @action(
+    #     detail=True,
+    #     methods=['post', 'delete'],
+    #     url_path='subscribe',
+    #     url_name='subscribe',
+    # )
+    # def add_or_delete_subscription(self, request, id):
+    #     """Подписаться и отписываться от автора рецепта."""
+    #     author = get_object_or_404(User, id=id)
+    #     if request.method == 'POST':
+    #         serializer = SubscriptionShowSerializer(
+    #             author, context={'request': request}
+    #         )
+    #         serializer = SubscriptionSerializer(
+    #             data={'user': request.user.id, 'author': author.id}
+    #         )
+    #         serializer.is_valid(raise_exception=True)
+    #         serializer.save()
+    #     subscription = get_object_or_404(
+    #         Follow, user=request.user, author=author
+    #     )
+    #     subscription.delete()
+    #     return Response(status=status.HTTP_204_NO_CONTENT)
+
     @action(
         detail=True,
         methods=['post', 'delete'],
@@ -56,18 +80,13 @@ class UserViewSet(UserViewSet):
         """Подписаться и отписываться от автора рецепта."""
         author = get_object_or_404(User, id=id)
         if request.method == 'POST':
-            serializer = SubscriptionShowSerializer(
-                author, context={'request': request}
-            )
             serializer = SubscriptionSerializer(
                 data={'user': request.user.id, 'author': author.id}
             )
             serializer.is_valid(raise_exception=True)
             serializer.save()
-        subscription = get_object_or_404(
-            Follow, user=request.user, author=author
-        )
-        subscription.delete()
+        else:
+            Follow.objects.filter(user=request.user, author=author).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
@@ -226,7 +245,7 @@ class RecipeViewSet(ModelViewSet):
         Формирует список уникальных ингредиентов и суммы их количества.
         """
         ingredients = RecipeIngredient.objects.filter(
-            recipe__shopping_recipe__user=request.user
+            recipe__shopping_recipes__user=request.user
         ).values(
             'ingredient__name',
             'ingredient__measurement_unit'
