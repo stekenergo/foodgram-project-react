@@ -47,34 +47,49 @@ class CreateUserSerializer(UserCreateSerializer):
         extra_kwargs = {'password': {'write_only': True}}
 
 
-class CartSerializer(serializers.ModelSerializer):
-    """Сериализатор для покупок."""
-
-    class Meta:
-        model = Cart
-        fields = ('user', 'recipe')
-        validators = [
-            UniqueTogetherValidator(
-                queryset=Cart.objects.all(),
-                fields=('user', 'recipe'),
-                message='Данный рецепт уже добавлен',
-            )
-        ]
-
-
 class FavoriteSerializer(serializers.ModelSerializer):
-    """Сериализатор для подписок."""
-
+    """Сериализатор для избранного."""
     class Meta:
         model = Favorite
         fields = ('user', 'recipe')
-        validators = [
-            UniqueTogetherValidator(
-                queryset=Favorite.objects.all(),
-                fields=('user', 'recipe'),
-                message='Данный рецепт уже добавлен'
+
+    def validate(self, value):
+        if Favorite.objects.filter(
+            user=value['user'], recipe=value['recipe']
+        ).exists():
+            raise serializers.ValidationError(
+                {'errors': 'Рецепт уже добавлен в избранное!'}
             )
-        ]
+        return value
+
+    def to_representation(self, instance):
+        return FavoriteAndShoppingCartResponseSerializer(instance).data
+
+
+class CartSerializer(serializers.ModelSerializer):
+    """Сериализатор для списка покупок."""
+    class Meta:
+        model = Cart
+        fields = ('user', 'recipe')
+
+    def validate(self, value):
+        if Cart.objects.filter(
+            user=value['user'], recipe=value['recipe']
+        ).exists():
+            raise serializers.ValidationError(
+                {'errors': 'Рецепт уже добавлен в список покупок!'}
+            )
+        return value
+
+    def to_representation(self, instance):
+        return FavoriteAndShoppingCartResponseSerializer(instance).data
+
+
+class FavoriteAndShoppingCartResponseSerializer(serializers.Serializer):
+    """Сериализатор для выдачи данных для избранного и списка покупок."""
+
+    def to_representation(self, instance):
+        return RecipeShortSerializer(instance.recipe).data
 
 
 class IngredientSerializer(serializers.ModelSerializer):
@@ -113,7 +128,7 @@ class RecipeIngredientCreateSerializer(serializers.ModelSerializer):
         source='ingredient',
         queryset=Ingredient.objects.all()
     )
-    amount = serializers.IntegerField
+    amount = serializers.IntegerField()
 
     class Meta:
         model = RecipeIngredient
@@ -132,6 +147,8 @@ class RecipeIngredientCreateSerializer(serializers.ModelSerializer):
 class RecipeShortSerializer(serializers.ModelSerializer):
     """Сериализатор для превью рецептов."""
 
+    name = serializers.CharField()
+    cooking_time = serializers.IntegerField(min_value=MIN_VALUE)
     image = Base64ImageField(use_url=True, max_length=None)
 
     class Meta:
@@ -142,11 +159,7 @@ class RecipeShortSerializer(serializers.ModelSerializer):
             'image',
             'cooking_time'
         )
-
-    def to_representation(self, instance):
-        """Переопределение метода для управления выводом."""
-        data = super().to_representation(instance)
-        return data
+        read_only_fields = ('name', 'image', 'cooking_time')
 
 
 class RecipeSerializer(serializers.ModelSerializer):
@@ -182,14 +195,9 @@ class RecipeSerializer(serializers.ModelSerializer):
     def get_is_in_shopping_cart(self, obj):
         """Истина, если рецепт в корзине, иначе Ложь."""
         request = self.context.get('request')
-        return (
-            request
-            and request.user.is_authenticated
-            and Cart.objects.filter(
-                user=request.user,
-                recipe=obj
-            ).exists()
-        )
+        if request and request.user.is_authenticated:
+            return Cart.objects.filter(user=request.user, recipe=obj).exists()
+        return False
 
 
 class RecipeCreateSerializer(serializers.ModelSerializer):
@@ -303,15 +311,21 @@ class SubscriptionSerializer(serializers.ModelSerializer):
             )
         return data
 
+    def to_representation(self, instance):
+        request = self.context.get('request')
+        return SubscriptionShowSerializer(
+            instance.author, context={'request': request}
+        ).data
+
 
 class SubscriptionShowSerializer(UserSerializer):
     """Отображение списка подписок на других авторов."""
 
     recipes = serializers.SerializerMethodField()
-    recipes_count = serializers.ReadOnlyField(source='get_recipes_count')
+    recipes_count = serializers.SerializerMethodField()
 
-    class Meta(CreateUserSerializer.Meta):
-        fields = CreateUserSerializer.Meta.fields + (
+    class Meta(UserSerializer.Meta):
+        fields = UserSerializer.Meta.fields + (
             'recipes', 'recipes_count'
         )
 
@@ -329,7 +343,7 @@ class SubscriptionShowSerializer(UserSerializer):
         return RecipeShortSerializer(author_recipes, many=True).data
 
     def get_recipes_count(self, object):
-        return object.recipes.count()
+        return Recipe.objects.filter(author=object).count()
 
     def to_representation(self, instance):
         """Переопределение метода для управления выводом."""
