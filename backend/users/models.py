@@ -8,6 +8,7 @@ from users.validators import validate_username
 
 class User(AbstractUser):
     """Модель кастомного пользователя."""
+
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username', 'first_name', 'last_name', 'password']
 
@@ -17,7 +18,6 @@ class User(AbstractUser):
         unique=True,
         validators=(validate_username, UnicodeUsernameValidator()),
     )
-    # проверка на me в validators.py
     email = models.EmailField(
         'Адрес электронной почты',
         unique=True,

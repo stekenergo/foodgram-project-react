@@ -96,15 +96,15 @@ sudo cp -r путь_к_директории_с_фронтенд-приложен
 pip install gunicorn==20.1.0
 ```
 ```
-gunicorn --bind 0.0.0.0:8080 kittygram_backend.wsgi
+gunicorn --bind 0.0.0.0:8080 foodgram_backend.wsgi
 ```
-**Создайте файл конфигурации юнита systemd для Gunicorn в директории (скопируйте файл gunicorn_kittygram.service с папки infra) /etc/systemd/system/gunicorn_kittygram.service:
+**Создайте файл конфигурации юнита systemd для Gunicorn в директории (скопируйте файл gunicorn_foodgram.service с папки infra) /etc/systemd/system/gunicorn_foodgram.service:
 ```
-sudo nano /etc/systemd/system/gunicorn_kittygram.service
+sudo nano /etc/systemd/system/gunicorn_foodgram.service
 ```
 **Команда sudo systemctl с параметрами start, stop или restart запустит, остановит или перезапустит Gunicorn:
 ```
-sudo systemctl start gunicorn_kittygram.service
+sudo systemctl start gunicorn_foodgram.service
 ```
 ### Установка и настройка WSGI-сервера Gunicorn:
 **Установите Nginx на удалённый сервер:

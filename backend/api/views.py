@@ -152,34 +152,14 @@ class RecipeViewSet(ModelViewSet):
     filterset_class = RecipeFilter
     filter_backends = (DjangoFilterBackend,)
 
-    @action(
-        detail=True,
-        methods=['post'],
-        permission_classes=[permissions.IsAuthenticated],
-        url_path='favorite',
-        url_name='favorite',
-    )
-    def favorite(self, request, pk):
-        """Добавление и удаление рецепта в избранное."""
-        serializer = FavoriteSerializer(
+    def add_to_list(self, request, pk, serializer_class):
+        """Общая функция для добавления в избранное и в конзину."""
+        serializer = serializer_class(
             data={'user': request.user.pk, 'recipe': pk}
         )
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-    @favorite.mapping.delete
-    def delete_favorite(self, request, pk):
-        recipe = get_object_or_404(Recipe, id=pk)
-        deleted_favorites, _ = Favorite.objects.filter(
-            user=request.user, recipe=recipe
-        ).delete()
-        if not deleted_favorites:
-            return Response(
-                {'errors': 'Рецепта нет в избранном!'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
         detail=True,
@@ -190,25 +170,47 @@ class RecipeViewSet(ModelViewSet):
     )
     def shopping_cart(self, request, pk):
         """Добавление и удаление рецепта в список покупок."""
-        serializer = CartSerializer(
-            data={'user': request.user.pk, 'recipe': pk}
-        )
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return self.add_to_list(request, pk, CartSerializer)
 
-    @shopping_cart.mapping.delete
-    def delete_shopping_cart(self, request, pk):
-        recipe = get_object_or_404(Recipe, id=pk)
-        deleted_shopping_list, _ = (
-            Cart.objects.filter(user=request.user, recipe=recipe)
+    @action(
+        detail=True,
+        methods=['post'],
+        permission_classes=[permissions.IsAuthenticated],
+        url_path='favorite',
+        url_name='favorite',
+    )
+    def favorite(self, request, pk):
+        """Добавление и удаление рецепта в избранное."""
+        return self.add_to_list(request, pk, FavoriteSerializer)
+
+    def delete_item_from_list(
+            self, request, model_class, recipe, error_message):
+        """Общая функция для удаления из избранного и корзины."""
+        deleted_items, _ = model_class.objects.filter(
+            user=request.user, recipe=recipe
         ).delete()
-        if not deleted_shopping_list:
+        if not deleted_items:
             return Response(
-                {'errors': 'Рецепта нет в списке покупок!'},
+                {'errors': error_message},
                 status=status.HTTP_400_BAD_REQUEST
             )
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @favorite.mapping.delete
+    def delete_favorite(self, request, pk):
+        """Для удаления из избранного."""
+        recipe = get_object_or_404(Recipe, id=pk)
+        return self.delete_item_from_list(
+            request, Favorite, recipe, 'Рецепта нет в избранном!'
+        )
+
+    @shopping_cart.mapping.delete
+    def delete_shopping_cart(self, request, pk):
+        """Для удаления из корзины."""
+        recipe = get_object_or_404(Recipe, id=pk)
+        return self.delete_item_from_list(
+            request, Cart, recipe, 'Рецепта нет в списке покупок!'
+        )
 
     def get_queryset(self):
         """Оптимизация запросов к базе данных."""
@@ -249,7 +251,7 @@ class RecipeViewSet(ModelViewSet):
         Формирует список уникальных ингредиентов и суммы их количества.
         """
         ingredients = RecipeIngredient.objects.filter(
-            recipe__shopping_recipes__user=request.user
+            recipe__carts__user=request.user
         ).values(
             'ingredient__name',
             'ingredient__measurement_unit'

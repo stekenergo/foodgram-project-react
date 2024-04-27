@@ -99,12 +99,11 @@ class Ingredient(models.Model):
 class RecipeIngredient(models.Model):
     """Кол-во ингредиента в рецепте."""
     recipe = models.ForeignKey(
-        Recipe, on_delete=models.CASCADE, related_name='recipe_ingredients'
+        Recipe, on_delete=models.CASCADE,
     )
     ingredient = models.ForeignKey(
         Ingredient,
         on_delete=models.CASCADE,
-        related_name='ingredients'
     )
     amount = models.PositiveIntegerField(
         verbose_name='Кол-во ингредиента в рецепте.',
@@ -126,6 +125,7 @@ class RecipeIngredient(models.Model):
                 name='unique_ingredient',
             ),
         ]
+        default_related_name = 'recipe_ingredients'
 
     def __str__(self):
         return f'{self.recipe} готовят из {self.ingredient}'
@@ -168,13 +168,11 @@ class Cart(models.Model):
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='shopping_сarts',
         verbose_name='Пользователь',
     )
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
-        related_name='shopping_recipes',
         verbose_name='Рецепт',
     )
 
@@ -188,6 +186,7 @@ class Cart(models.Model):
                 name='unique_shoppingcart',
             )
         ]
+        default_related_name = 'carts'
 
     def __str__(self):
         return f'{self.user} добавлено в корзину {self.recipe}'

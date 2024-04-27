@@ -49,6 +49,7 @@ class CreateUserSerializer(UserCreateSerializer):
 
 class FavoriteSerializer(serializers.ModelSerializer):
     """Сериализатор для избранного."""
+
     class Meta:
         model = Favorite
         fields = ('user', 'recipe')
@@ -68,6 +69,7 @@ class FavoriteSerializer(serializers.ModelSerializer):
 
 class CartSerializer(serializers.ModelSerializer):
     """Сериализатор для списка покупок."""
+
     class Meta:
         model = Cart
         fields = ('user', 'recipe')
@@ -93,7 +95,7 @@ class FavoriteAndShoppingCartResponseSerializer(serializers.Serializer):
 
 
 class IngredientSerializer(serializers.ModelSerializer):
-    """Сериализатор для для ингредиентов."""
+    """Сериализатор для ингредиентов."""
 
     class Meta:
         model = Ingredient
@@ -195,9 +197,14 @@ class RecipeSerializer(serializers.ModelSerializer):
     def get_is_in_shopping_cart(self, obj):
         """Истина, если рецепт в корзине, иначе Ложь."""
         request = self.context.get('request')
-        if request and request.user.is_authenticated:
-            return Cart.objects.filter(user=request.user, recipe=obj).exists()
-        return False
+        return (
+            request
+            and request.user.is_authenticated
+            and obj.carts.filter(
+                user=request.user,
+                recipe=obj
+            ).exists()
+        )
 
 
 class RecipeCreateSerializer(serializers.ModelSerializer):
