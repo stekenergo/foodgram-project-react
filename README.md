@@ -150,9 +150,9 @@ username/foodgram_gateway.
 **Выполнять команды для сборки статики в приложении бэкенда, переносить статику в volume; выполнять миграции;
 **Извещать вас в Telegram об успешном завершении деплоя.
 
-[Документацию проекта можно посмотреть по этой ссылке](https://foodgramdesk.sytes.net/api/docs/)
+[Документацию проекта можно посмотреть по этой ссылке](https://foodgramassist.sytes.net/api/docs/)
 
-[Работу проекта можно посмотреть по этой ссылке](https://foodgramdesk.sytes.net)
+[Работу проекта можно посмотреть по этой ссылке](https://foodgramassist.sytes.net)
 
 ### Автор: 
 [Дмитрий](https://github.com/stekenergo)
